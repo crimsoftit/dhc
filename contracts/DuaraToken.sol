@@ -15,14 +15,22 @@ contract DuaraToken {
 	uint256 public totalSupply;
 
 	mapping (address => uint256) public balanceOf;
+	mapping (address => mapping (address => uint256)) public allowance;
+	
 
 	// declare transfer event
-	event Transfer(
+	event Transfer (
 		address indexed _from,
 		address indexed _to,
 		uint256 _value
 	);
 	
+	// declare approval event
+	event Approval (
+		address indexed _owner,
+		address indexed _spender,
+		uint256 _value
+	);
 	
 
 	// constructor
@@ -31,6 +39,7 @@ contract DuaraToken {
   		balanceOf[msg.sender] =_initialSupply;
     	totalSupply = _initialSupply;
   	}
+
 
   	// transfer tokens function
   	function transfer (address _to, uint256 _value) public returns(bool success) {
@@ -48,8 +57,44 @@ contract DuaraToken {
 	  	// return a boolean
 	  	return true;
   	}
-  	
 
+  	
+  	// approve delegated transfer of tokens
+  	function approve (address _spender, uint256 _value) public returns(bool success) {
+  		// set the allowance
+  		allowance[msg.sender][_spender] = _value;
+
+  		// trigger the approval event
+  		emit Approval (msg.sender, _spender, _value);
+  		
+  		return true;
+  	}
+
+
+  	// transferFrom function
+  	function transferFrom (address _from, address _to, uint256 _value) public returns(bool success) {
+
+  		// require that the _from account has sufficient tokens
+  		require (balanceOf[_from] >= _value);
+  		
+  		// require that the allowance is big enough
+  		require (allowance[_from][msg.sender] >= _value);  		
+
+  		// update the sender's balance
+  		balanceOf[_from] -= _value;
+
+  		// update the receiver's balance
+  		balanceOf[_to] += _value;
+
+  		// update the allowance
+  		allowance[_from][msg.sender] -= _value;
+
+  		// trigger a transfer event
+  		emit Transfer(_from, _to, _value);
+
+  		// return a boolean
+  		return true;
+  	}
   	
 }
 
